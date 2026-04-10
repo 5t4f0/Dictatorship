@@ -50,9 +50,6 @@ public class CameraController : MonoBehaviour
     void Update()
     {
 
-        // Follow player - camera offset
-        transform.position = player.position + new Vector3(0, offsetDistanceY, 0);
-
         // Set camera zoom when mouse wheel is scrolled
         if( canZoom && Input.GetAxis("Mouse ScrollWheel") != 0 )
             Camera.main.fieldOfView -= Input.GetAxis("Mouse ScrollWheel") * sensitivity * 2;

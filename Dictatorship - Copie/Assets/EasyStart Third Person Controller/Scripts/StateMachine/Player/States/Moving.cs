@@ -5,6 +5,7 @@ public class Moving : PlayerState
     CharacterController cc;
     Animator animator;
     public float velocity = 5f;
+    public float gravity = 9.8f;
     public override void Enter(StateMachine stateMachine) 
     {
         cc = GetComponent<CharacterController>();
@@ -25,11 +26,35 @@ public class Moving : PlayerState
         {
             StateMachine.TransitionTo(StateMachine.states[2]);
         }
+        
     }
 
     public override void FixedTick()
     {
         var directionX = Movement(out var directionZ, out var directionY);
+        directionY = directionY - gravity * Time.deltaTime;
+        Vector3 forward = Camera.main.transform.forward;
+        Vector3 right = Camera.main.transform.right;
+        forward.y = 0;
+        right.y = 0;
+        forward.Normalize();
+        right.Normalize();
+        forward = forward * directionZ;
+        right = right * directionX;
+        
+        if (directionX != 0 || directionZ != 0)
+        {
+            float angle = Mathf.Atan2(forward.x + right.x, forward.z + right.z) * Mathf.Rad2Deg;
+            Quaternion rotation = Quaternion.Euler(0, angle, 0);
+            transform.rotation = Quaternion.Slerp(transform.rotation, rotation, 0.15f);
+        }
+
+        
+        Vector3 verticalDirection = Vector3.up * directionY;
+        Vector3 horizontalDirection = forward + right;
+
+        Vector3 moviment = verticalDirection + horizontalDirection;
+        cc.Move( moviment );
     }
     private float Movement(out float directionZ, out float directionY)
     {
@@ -41,12 +66,12 @@ public class Moving : PlayerState
         float directionX = inputHorizontal * velocity  * Time.deltaTime;
         directionZ = inputVertical * velocity  * Time.deltaTime;
         directionY = 0;
-        return directionX;
         if ( cc.isGrounded && animator != null )
         {
             float minimumSpeed = 0.9f;
             animator.SetBool("run", cc.velocity.magnitude > minimumSpeed );
         }
+        return directionX;
     }
 
     public override void Exit()
